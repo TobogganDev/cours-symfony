@@ -1,0 +1,63 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block body %}
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-12">
+                <h1>Dashboard</h1>
+                <p>Bienvenue {{ app.user.email }} !</p>
+
+                <div class="mb-3">
+                    <a href="{{ path('article_new') }}" class="btn btn-primary">Créer un article</a>
+                    {% if is_granted('ROLE_ADMIN') %}
+                        <a href="{{ path('app_admin_notifications') }}" class="btn btn-info">Mes notifications</a>
+                    {% endif %}
+                    <a href="{{ path('app_profile') }}" class="btn btn-secondary">Mon profil</a>
+                    <a href="{{ path('app_logout') }}" class="btn btn-danger">Déconnexion</a>
+                </div>
+
+                <h2>{% if is_granted('ROLE_ADMIN') %}Tous les articles{% else %}Mes articles{% endif %}</h2>
+
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Titre</th>
+                        <th>Description</th>
+                        <th>Auteur</th>
+                        <th>Date de création</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for article in articles %}
+                        <tr>
+                            <td>{{ article.titre }}</td>
+                            <td>{{ article.description|slice(0, 50) }}...</td>
+                            <td>{{ article.user.email }}</td>
+                            <td>{{ article.createdAt|date('d/m/Y H:i') }}</td>
+                            <td>
+                                <a href="{{ path('article_show', {'id': article.id}) }}" class="btn btn-sm btn-info">Voir</a>
+                                {% if article.user == app.user %}
+                                    <a href="{{ path('article_edit', {'id': article.id}) }}" class="btn btn-sm btn-warning">Modifier</a>
+                                {% endif %}
+                                {% if article.user == app.user or is_granted('ROLE_ADMIN') %}
+                                    <form method="post" action="{{ path('article_delete', {'id': article.id}) }}" style="display:inline-block" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet article ?');">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ article.id) }}">
+                                        <button class="btn btn-sm btn-danger">Supprimer</button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center">Aucun article trouvé</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}

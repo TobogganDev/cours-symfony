@@ -22,7 +22,7 @@ class ArticleListener
         // Envoyer un message pour notifier les admins
         $this->messageBus->dispatch(new SendAdminNotificationMessage(
             $article->getId(),
-            $article->getTitre(),
+            $article->getTitle(),
             $article->getUser()->getEmail()
         ));
     }

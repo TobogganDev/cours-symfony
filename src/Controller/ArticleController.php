@@ -3,37 +3,42 @@
 namespace App\Controller;
 
 use App\Entity\Article;
-use App\Form\ArticleForm;
+use App\Form\ArticleType;
 use App\Repository\ArticleRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/article')]
-final class ArticleController extends AbstractController
+#[IsGranted('ROLE_USER')]
+class ArticleController extends AbstractController
 {
-    #[Route(name: 'app_article_index', methods: ['GET'])]
+    #[Route('/', name: 'article_index', methods: ['GET'])]
     public function index(ArticleRepository $articleRepository): Response
     {
-        return $this->render('article/index.html.twig', [
-            'articles' => $articleRepository->findAll(),
-        ]);
+        // Rediriger vers le dashboard qui gère déjà l'affichage des articles
+        return $this->redirectToRoute('app_dashboard');
     }
 
-    #[Route('/new', name: 'app_article_new', methods: ['GET', 'POST'])]
+    #[Route('/new', name: 'article_new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $article = new Article();
-        $form = $this->createForm(ArticleForm::class, $article);
+        $article->setUser($this->getUser());
+
+        $form = $this->createForm(ArticleType::class, $article);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->persist($article);
             $entityManager->flush();
 
-            return $this->redirectToRoute('app_article_index', [], Response::HTTP_SEE_OTHER);
+            $this->addFlash('success', 'Article créé avec succès !');
+
+            return $this->redirectToRoute('app_dashboard');
         }
 
         return $this->render('article/new.html.twig', [
@@ -42,24 +47,36 @@ final class ArticleController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}', name: 'app_article_show', methods: ['GET'])]
+    #[Route('/{id}', name: 'article_show', methods: ['GET'])]
     public function show(Article $article): Response
     {
+        // Vérifier que l'utilisateur peut voir cet article
+        if ($article->getUser() !== $this->getUser() && !$this->isGranted('ROLE_ADMIN')) {
+            throw $this->createAccessDeniedException('Vous ne pouvez pas voir cet article.');
+        }
+
         return $this->render('article/show.html.twig', [
             'article' => $article,
         ]);
     }
 
-    #[Route('/{id}/edit', name: 'app_article_edit', methods: ['GET', 'POST'])]
+    #[Route('/{id}/edit', name: 'article_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Article $article, EntityManagerInterface $entityManager): Response
     {
-        $form = $this->createForm(ArticleForm::class, $article);
+        // Seul l'auteur peut modifier son article
+        if ($article->getUser() !== $this->getUser()) {
+            throw $this->createAccessDeniedException('Vous ne pouvez pas modifier cet article.');
+        }
+
+        $form = $this->createForm(ArticleType::class, $article);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
 
-            return $this->redirectToRoute('app_article_index', [], Response::HTTP_SEE_OTHER);
+            $this->addFlash('success', 'Article modifié avec succès !');
+
+            return $this->redirectToRoute('app_dashboard');
         }
 
         return $this->render('article/edit.html.twig', [
@@ -68,14 +85,21 @@ final class ArticleController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}', name: 'app_article_delete', methods: ['POST'])]
+    #[Route('/{id}', name: 'article_delete', methods: ['POST'])]
     public function delete(Request $request, Article $article, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$article->getId(), $request->getPayload()->getString('_token'))) {
-            $entityManager->remove($article);
-            $entityManager->flush();
+        // L'auteur ou un admin peut supprimer l'article
+        if ($article->getUser() !== $this->getUser() && !$this->isGranted('ROLE_ADMIN')) {
+            throw $this->createAccessDeniedException('Vous ne pouvez pas supprimer cet article.');
         }
 
-        return $this->redirectToRoute('app_article_index', [], Response::HTTP_SEE_OTHER);
+        if ($this->isCsrfTokenValid('delete'.$article->getId(), $request->get('_token'))) {
+            $entityManager->remove($article);
+            $entityManager->flush();
+
+            $this->addFlash('success', 'Article supprimé avec succès !');
+        }
+
+        return $this->redirectToRoute('app_dashboard');
     }
 }

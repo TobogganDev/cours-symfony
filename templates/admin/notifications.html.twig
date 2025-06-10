@@ -1,0 +1,38 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes Notifications{% endblock %}
+
+{% block body %}
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-12">
+                <h1>Mes Notifications</h1>
+
+                <div class="mb-3">
+                    <a href="{{ path('app_dashboard') }}" class="btn btn-secondary">Retour au dashboard</a>
+                </div>
+
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Message</th>
+                        <th>Date</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for notification in notifications %}
+                        <tr>
+                            <td>{{ notification.label }}</td>
+                            <td>{{ notification.createdAt|date('d/m/Y H:i') }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="2" class="text-center">Aucune notification</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}
