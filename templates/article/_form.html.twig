@@ -1,4 +1,23 @@
-{{ form_start(form) }}
-    {{ form_widget(form) }}
-    <button class="btn">{{ button_label|default('Save') }}</button>
+{{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+<div class="mb-3">
+    {{ form_label(form.title, null, {'label_attr': {'class': 'form-label fw-medium'}}) }}
+    {{ form_widget(form.title, {'attr': {'class': 'form-control', 'placeholder': 'Entrez le titre de votre article'}}) }}
+    {{ form_errors(form.title) }}
+</div>
+
+<div class="mb-4">
+    {{ form_label(form.description, null, {'label_attr': {'class': 'form-label fw-medium'}}) }}
+    {{ form_widget(form.description, {'attr': {'class': 'form-control', 'rows': 8, 'placeholder': 'Rédigez le contenu de votre article...'}}) }}
+    {{ form_errors(form.description) }}
+    <small class="text-muted">Vous pouvez utiliser le markdown pour formater votre texte</small>
+</div>
+
+<div class="d-flex gap-2">
+    <button class="btn btn-primary" type="submit">
+        <i class="bi bi-check-lg"></i> {{ button_label|default('Enregistrer') }}
+    </button>
+    <a href="{{ path('app_dashboard') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-x-lg"></i> Annuler
+    </a>
+</div>
 {{ form_end(form) }}

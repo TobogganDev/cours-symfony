@@ -1,11 +1,24 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}New Article{% endblock %}
+{% block title %}Nouvel article - Mon Blog{% endblock %}
 
 {% block body %}
-    <h1>Create new Article</h1>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="page-header">
+                    <h1 class="h2">
+                        <i class="bi bi-pencil-square"></i> Nouvel article
+                    </h1>
+                    <p class="text-muted">Partagez vos idées avec la communauté</p>
+                </div>
 
-    {{ include('article/_form.html.twig') }}
-
-    <a href="{{ path('app_article_index') }}">back to list</a>
+                <div class="card">
+                    <div class="card-body p-4">
+                        {{ include('article/_form.html.twig', {'button_label': 'Publier l\'article'}) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}

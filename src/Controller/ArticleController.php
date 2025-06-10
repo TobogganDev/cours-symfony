@@ -16,14 +16,14 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_USER')]
 class ArticleController extends AbstractController
 {
-    #[Route('/', name: 'article_index', methods: ['GET'])]
+    #[Route('/', name: 'app_article_index', methods: ['GET'])]
     public function index(ArticleRepository $articleRepository): Response
     {
         // Rediriger vers le dashboard qui gère déjà l'affichage des articles
         return $this->redirectToRoute('app_dashboard');
     }
 
-    #[Route('/new', name: 'article_new', methods: ['GET', 'POST'])]
+    #[Route('/new', name: 'app_article_new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $article = new Article();
@@ -47,7 +47,7 @@ class ArticleController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}', name: 'article_show', methods: ['GET'])]
+    #[Route('/{id}', name: 'app_article_show', methods: ['GET'])]
     public function show(Article $article): Response
     {
         // Vérifier que l'utilisateur peut voir cet article
@@ -60,7 +60,7 @@ class ArticleController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}/edit', name: 'article_edit', methods: ['GET', 'POST'])]
+    #[Route('/{id}/edit', name: 'app_article_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Article $article, EntityManagerInterface $entityManager): Response
     {
         // Seul l'auteur peut modifier son article
@@ -85,7 +85,7 @@ class ArticleController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}', name: 'article_delete', methods: ['POST'])]
+    #[Route('/{id}', name: 'app_article_delete', methods: ['POST'])]
     public function delete(Request $request, Article $article, EntityManagerInterface $entityManager): Response
     {
         // L'auteur ou un admin peut supprimer l'article

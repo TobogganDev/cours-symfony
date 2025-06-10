@@ -1,62 +1,149 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Dashboard{% endblock %}
+{% block title %}Dashboard - Mon Blog{% endblock %}
 
 {% block body %}
-    <div class="container mt-5">
-        <div class="row">
-            <div class="col-12">
-                <h1>Dashboard</h1>
-                <p>Bienvenue {{ app.user.email }} !</p>
-
-                <div class="mb-3">
-                    <a href="{{ path('article_new') }}" class="btn btn-primary">Créer un article</a>
+    <div class="container">
+        <!-- Header -->
+        <div class="page-header d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="h2">Dashboard</h1>
+                <p class="text-muted mb-0">
+                    Bienvenue {{ app.user.email }}
                     {% if is_granted('ROLE_ADMIN') %}
-                        <a href="{{ path('app_admin_notifications') }}" class="btn btn-info">Mes notifications</a>
+                        <span class="badge bg-primary ms-2"><i class="bi bi-shield-check"></i> Admin</span>
                     {% endif %}
-                    <a href="{{ path('app_profile') }}" class="btn btn-secondary">Mon profil</a>
-                    <a href="{{ path('app_logout') }}" class="btn btn-danger">Déconnexion</a>
+                </p>
+            </div>
+            <div>
+                <a href="{{ path('app_article_new') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg"></i> Nouvel article
+                </a>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="bi bi-file-text text-primary" style="font-size: 2rem;"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="text-muted mb-1">Total articles</h6>
+                                <h3 class="mb-0">{{ articles|length }}</h3>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+            </div>
+            {% if is_granted('ROLE_ADMIN') %}
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class="bi bi-people text-success" style="font-size: 2rem;"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="text-muted mb-1">Auteurs</h6>
+                                    <h3 class="mb-0">{{ articles|map(a => a.user.id)|length }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
 
-                <h2>{% if is_granted('ROLE_ADMIN') %}Tous les articles{% else %}Mes articles{% endif %}</h2>
-
-                <table class="table">
-                    <thead>
-                    <tr>
-                        <th>Titre</th>
-                        <th>Description</th>
-                        <th>Auteur</th>
-                        <th>Date de création</th>
-                        <th>Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for article in articles %}
+        <!-- Articles Table -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-journal-text"></i>
+                    {% if is_granted('ROLE_ADMIN') %}Tous les articles{% else %}Mes articles{% endif %}
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
                         <tr>
-                            <td>{{ article.titre }}</td>
-                            <td>{{ article.description|slice(0, 50) }}...</td>
-                            <td>{{ article.user.email }}</td>
-                            <td>{{ article.createdAt|date('d/m/Y H:i') }}</td>
-                            <td>
-                                <a href="{{ path('article_show', {'id': article.id}) }}" class="btn btn-sm btn-info">Voir</a>
-                                {% if article.user == app.user %}
-                                    <a href="{{ path('article_edit', {'id': article.id}) }}" class="btn btn-sm btn-warning">Modifier</a>
-                                {% endif %}
-                                {% if article.user == app.user or is_granted('ROLE_ADMIN') %}
-                                    <form method="post" action="{{ path('article_delete', {'id': article.id}) }}" style="display:inline-block" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet article ?');">
-                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ article.id) }}">
-                                        <button class="btn btn-sm btn-danger">Supprimer</button>
-                                    </form>
-                                {% endif %}
-                            </td>
+                            <th style="width: 30%">Titre</th>
+                            <th style="width: 35%">Description</th>
+                            <th style="width: 15%">Auteur</th>
+                            <th style="width: 15%">Date</th>
+                            <th style="width: 5%" class="text-center">Actions</th>
                         </tr>
-                    {% else %}
-                        <tr>
-                            <td colspan="5" class="text-center">Aucun article trouvé</td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                        {% for article in articles %}
+                            <tr>
+                                <td>
+                                    <a href="{{ path('app_article_show', {'id': article.id}) }}" class="text-decoration-none text-dark fw-medium">
+                                        {{ article.title }}
+                                    </a>
+                                </td>
+                                <td class="text-muted">
+                                    {{ article.description|slice(0, 60) }}{% if article.description|length > 60 %}...{% endif %}
+                                </td>
+                                <td>
+                                <span class="badge bg-secondary">
+                                    <i class="bi bi-person"></i> {{ article.user.email|split('@')[0] }}
+                                </span>
+                                </td>
+                                <td class="text-muted">
+                                    <i class="bi bi-calendar3"></i> {{ article.createdAt|date('d/m/Y') }}
+                                </td>
+                                <td>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown">
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li>
+                                                <a class="dropdown-item" href="{{ path('app_article_show', {'id': article.id}) }}">
+                                                    <i class="bi bi-eye"></i> Voir
+                                                </a>
+                                            </li>
+                                            {% if article.user == app.user %}
+                                                <li>
+                                                    <a class="dropdown-item" href="{{ path('app_article_edit', {'id': article.id}) }}">
+                                                        <i class="bi bi-pencil"></i> Modifier
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+                                            {% if article.user == app.user or is_granted('ROLE_ADMIN') %}
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li>
+                                                    <form method="post" action="{{ path('app_article_delete', {'id': article.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet article ?');">
+                                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ article.id) }}">
+                                                        <button class="dropdown-item text-danger">
+                                                            <i class="bi bi-trash"></i> Supprimer
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                            {% endif %}
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5">
+                                    <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                                    <p class="text-muted mt-2">Aucun article trouvé</p>
+                                    <a href="{{ path('app_article_new') }}" class="btn btn-primary btn-sm">
+                                        <i class="bi bi-plus"></i> Créer mon premier article
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
